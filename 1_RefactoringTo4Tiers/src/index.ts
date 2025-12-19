@@ -1,45 +1,32 @@
-import express from 'express';
-import { assignStudentToAssignmentController, getStudentGradesController, getStudentSubmittedAssignmentsController, getStudentByIdController, getStudentsController, assignStudentToClassController, createStudentController } from './features/students/controllers';
+import express from "express";
+import AssignmentsController from "./features/assignments/controllers";
+import ClassesController from "./features/classes/controllers";
+import StudentsController from "./features/students/controllers";
+import { ErrorExceptionHandler } from "./errorHandler";
+import { assignStudentService } from "./features/assignments/services";
 
-import { createClassController } from './features/classes/controllers';
-import { gradeAssignmentController, getAssignmentsByClassIdController, getAssignmentByIdController, submitAssignmentController, createAssignmentController } from './features/assignments/controllers';
-
-
+const studentsController = new StudentsController(
+  "e",
+  new ErrorExceptionHandler()
+);
+const classesController = new ClassesController(
+  "e",
+  new ErrorExceptionHandler()
+);
+const assignmentsController = new AssignmentsController(
+  assignStudentService,
+  new ErrorExceptionHandler()
+);
 
 const app = express();
+
 app.use(express.json());
 
-
-// API Endpoints
-
-// students
-app.post('/students', createStudentController);
-app.post('/student-assignments', assignStudentToAssignmentController)
-app.get('/students', getStudentsController)
-app.get('/students/:id', getStudentByIdController)
-
-
-
-
-// classes
-app.post('/classes', createClassController);
-app.post('/class-enrollments', assignStudentToClassController)
-app.get('/classes/:id/assignments', getAssignmentsByClassIdController)
-
-
-
-
-// assignments 
-app.post('/assignments', createAssignmentController)
-app.post('/student-assignments/submit', submitAssignmentController)
-app.post('/student-assignments/grade', gradeAssignmentController)
-app.get('/assignments/:id', getAssignmentByIdController)
-app.get('/student/:id/assignments', getStudentSubmittedAssignmentsController)
-app.get('/student/:id/grades', getStudentGradesController)
-
+app.use("/students", studentsController.getRouter());
+app.use("/classes", classesController.getRouter());
+app.use("/assignments", assignmentsController.getRouter());
 
 const port = process.env.PORT || 3000;
-
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
