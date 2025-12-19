@@ -3,18 +3,29 @@ import AssignmentsController from "./features/assignments/controllers";
 import ClassesController from "./features/classes/controllers";
 import StudentsController from "./features/students/controllers";
 import { ErrorExceptionHandler } from "./errorHandler";
-import { assignStudentService } from "./features/assignments/services";
+import { assignmentServices } from "./features/assignments/services";
+import { studentServices } from "./features/students/services";
+import { classServices } from "./features/classes/services";
+import { Database } from "./database";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+const db = new Database(prisma);
 
 const studentsController = new StudentsController(
-  "e",
+  new studentServices(db),
   new ErrorExceptionHandler()
 );
 const classesController = new ClassesController(
-  "e",
+  new classServices(db),
+  new studentServices(db),
   new ErrorExceptionHandler()
 );
 const assignmentsController = new AssignmentsController(
-  assignStudentService,
+  new assignmentServices(db),
+  new classServices(db),
+  new studentServices(db),
   new ErrorExceptionHandler()
 );
 

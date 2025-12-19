@@ -1,140 +1,78 @@
-import { prisma, Database } from "../../database";
 import {
   AssignmentNotFoundException,
   StudentNotFoundException,
 } from "../errors";
 
-export async function assignStudentService({
-  studentId,
-  assignmentId,
-}: {
-  studentId: string;
-  assignmentId: string;
-}) {
-  const student = await Database.getStudentById(studentId);
+import { Database } from "../../database";
 
-  if (!student) {
-    throw new StudentNotFoundException();
+export class assignmentServices {
+  constructor(private db: Database) {
+    this.db = db;
   }
 
-  const assignment = await prisma.assignment.findUnique({
-    where: {
-      id: assignmentId,
-    },
-  });
+  async assignStudentService({
+    studentId,
+    assignmentId,
+  }: {
+    studentId: string;
+    assignmentId: string;
+  }) {
+    const student = await this.db.getStudentById(studentId);
 
-  if (!assignment) {
-    throw new AssignmentNotFoundException();
+    if (!student) {
+      throw new StudentNotFoundException();
+    }
+
+    const assignment = await this.db.getAssignmentById(assignmentId);
+
+    if (!assignment) {
+      throw new AssignmentNotFoundException();
+    }
+
+    return await this.db.createStudentAssignment(studentId, assignmentId);
   }
 
-  const studentAssignment = await prisma.studentAssignment.create({
-    data: {
-      studentId,
-      assignmentId,
-    },
-  });
+  async getStudentAssignmentService(id: string) {
+    return await this.db.getStudentAssignmentService(id);
+  }
 
-  return studentAssignment;
-}
+  async updateStudentAssignmentService(id: string) {
+    return await this.db.updateStudentAssignmentService(id);
+  }
 
-export async function getStudentAssignmentService(id: string) {
-  return prisma.studentAssignment.findUnique({
-    where: {
-      id,
-    },
-  });
-}
+  async createAssignmentService({
+    classId,
+    title,
+  }: {
+    classId: string;
+    title: string;
+  }) {
+    return await this.db.createAssignmentService(classId, title);
+  }
 
-export async function updateStudentAssignmentService(id: string) {
-  return prisma.studentAssignment.update({
-    where: {
-      id,
-    },
-    data: {
-      status: "submitted",
-    },
-  });
-}
+  async updateStudentAssignmentGradeService({
+    id,
+    grade,
+  }: {
+    id: string;
+    grade: string;
+  }) {
+    return await this.db.updateStudentAssignmentGradeService(id, grade);
+  }
 
-export async function createAssignmentService({
-  classId,
-  title,
-}: {
-  classId: string;
-  title: string;
-}) {
-  return prisma.assignment.create({
-    data: {
-      classId,
-      title,
-    },
-  });
-}
+  async getAssignmentByIdService(id: string) {
+    return await this.db.getAssignmentByIdService(id);
+  }
 
-export async function updateStudentAssignmentGradeService({
-  id,
-  grade,
-}: {
-  id: string;
-  grade: string;
-}) {
-  return prisma.studentAssignment.update({
-    where: {
-      id,
-    },
-    data: {
-      grade,
-    },
-  });
-}
+  async getAssignmentsByClassIdService(id: string) {
+    return await this.db.getAssignmentsByClassIdService(id);
+  }
 
-export async function getAssignmentByIdService(id: string) {
-  return prisma.assignment.findUnique({
-    include: {
-      class: true,
-      studentTasks: true,
-    },
-    where: {
-      id,
-    },
-  });
-}
+  async getStudentSubmittedAssignmentsService(id: string) {
+    return await this.db.getStudentSubmittedAssignmentsService(id);
+  }
 
-export async function getAssignmentsByClassIdService(id: string) {
-  return prisma.assignment.findMany({
-    where: {
-      classId: id,
-    },
-    include: {
-      class: true,
-      studentTasks: true,
-    },
-  });
-}
-
-export async function getStudentSubmittedAssignmentsService(id: string) {
-  return prisma.studentAssignment.findMany({
-    where: {
-      studentId: id,
-      status: "submitted",
-    },
-    include: {
-      assignment: true,
-    },
-  });
-}
-
-export async function getStudentGradesService(id: string) {
-  return prisma.studentAssignment.findMany({
-    where: {
-      studentId: id,
-      status: "submitted",
-      grade: {
-        not: null,
-      },
-    },
-    include: {
-      assignment: true,
-    },
-  });
+  async getStudentGradesService(id: string) {
+    return await this.db.getStudentGradesService(id);
+  }
 }

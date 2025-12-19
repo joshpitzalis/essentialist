@@ -1,49 +1,29 @@
-import { prisma, Database } from "../../database";
+import { Database } from "../../database";
 
-export async function createClassService(name: string) {
-  return prisma.class.create({
-    data: {
-      name,
-    },
-  });
-}
+export class classServices {
+  constructor(private db: Database) {
+    this.db = db;
+  }
 
-export async function getStudentService(id: string) {
-  return prisma.student.findUnique({
-    where: {
-      id,
-    },
-  });
-}
+  async createClassService(name: string) {
+    return await this.db.createClass(name);
+  }
 
-export async function getClassService(id: string) {
-  return prisma.class.findUnique({
-    where: {
-      id,
-    },
-  });
-}
+  async getClassService(id: string) {
+    return await this.db.getClassById(id);
+  }
 
-export async function getDuplicatedClassEnrollmentService(
-  studentId: string,
-  classId: string
-) {
-  return prisma.classEnrollment.findFirst({
-    where: {
+  async getDuplicatedClassEnrollmentService(
+    studentId: string,
+    classId: string
+  ) {
+    return await this.db.getDuplicatedClassEnrollmentService(
       studentId,
-      classId,
-    },
-  });
-}
+      classId
+    );
+  }
 
-export async function createClassEnrollmentService(
-  studentId: string,
-  classId: string
-) {
-  return prisma.classEnrollment.create({
-    data: {
-      studentId,
-      classId,
-    },
-  });
+  async createClassEnrollmentService(studentId: string, classId: string) {
+    return this.db.createClassEnrollmentService(studentId, classId);
+  }
 }

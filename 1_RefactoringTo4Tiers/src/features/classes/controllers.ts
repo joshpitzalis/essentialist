@@ -1,7 +1,5 @@
-import { isMissingKeys, parseForResponse, isUUID } from "../../utilities";
-import { prisma } from "../../database";
+import { isMissingKeys, parseForResponse } from "../../utilities";
 import express, { type Request, type Response, type Router } from "express";
-import { assignStudentService } from "../assignments/services";
 import { ErrorExceptionHandler } from "../../errorHandler";
 import {
   InvalidRequestBodyException,
@@ -9,19 +7,15 @@ import {
   StudentAlreadyEnrolledException,
   ClassNotFoundException,
 } from "../errors";
-import {
-  createClassEnrollmentService,
-  createClassService,
-  getClassService,
-  getDuplicatedClassEnrollmentService,
-  getStudentService,
-} from "./services";
+import { classServices } from "./services";
+import { studentServices } from "../students/services";
 
 export default class ClassesController {
   private router: Router;
 
   constructor(
-    private classService: string,
+    private classService: classServices,
+    private studentService: studentServices,
     private errorHandler: ErrorExceptionHandler
   ) {
     this.router = express.Router();
@@ -56,7 +50,7 @@ export default class ClassesController {
 
       const { name } = req.body;
 
-      const cls = await createClassService(name);
+      const cls = await this.classService.createClassService(name);
 
       res
         .status(201)
@@ -81,18 +75,21 @@ export default class ClassesController {
       const { studentId, classId } = req.body;
 
       // check if student exists
-      const student = await getStudentService(studentId);
+      const student = await this.studentService.getStudentService(studentId);
 
       if (!student) {
         throw new StudentNotFoundException();
       }
 
       // check if class exists
-      const cls = await getClassService(classId);
+      const cls = await this.classService.getClassService(classId);
 
       // check if student is already enrolled in class
       const duplicatedClassEnrollment =
-        await getDuplicatedClassEnrollmentService(studentId, classId);
+        await this.classService.getDuplicatedClassEnrollmentService(
+          studentId,
+          classId
+        );
 
       if (duplicatedClassEnrollment) {
         throw new StudentAlreadyEnrolledException();
@@ -102,10 +99,11 @@ export default class ClassesController {
         throw new ClassNotFoundException(classId);
       }
 
-      const classEnrollment = await createClassEnrollmentService(
-        studentId,
-        classId
-      );
+      const classEnrollment =
+        await this.classService.createClassEnrollmentService(
+          studentId,
+          classId
+        );
 
       res.status(201).json({
         error: undefined,

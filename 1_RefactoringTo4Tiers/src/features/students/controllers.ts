@@ -1,23 +1,18 @@
 import { isMissingKeys, parseForResponse, isUUID } from "../../utilities";
-import { prisma } from "../../database";
 import express, { type Request, type Response, type Router } from "express";
-import { assignStudentService } from "../assignments/services";
+
 import { ErrorExceptionHandler } from "../../errorHandler";
 import {
   InvalidRequestBodyException,
   StudentNotFoundException,
 } from "../errors";
-import {
-  createStudentService,
-  getStudentService,
-  getStudentsService,
-} from "./services";
+import type { studentServices } from "./services";
 
 export default class StudentController {
   private router: Router;
 
   constructor(
-    private studentService: string,
+    private studentServices: studentServices,
     private errorHandler: ErrorExceptionHandler
   ) {
     this.router = express.Router();
@@ -52,7 +47,7 @@ export default class StudentController {
 
       const { name } = req.body;
 
-      const student = await createStudentService(name);
+      const student = await this.studentServices.createStudentService(name);
 
       res.status(201).json({
         error: undefined,
@@ -70,7 +65,7 @@ export default class StudentController {
     next: express.NextFunction
   ) => {
     try {
-      const students = await getStudentsService();
+      const students = await this.studentServices.getStudentsService();
 
       res.status(200).json({
         error: undefined,
@@ -92,7 +87,7 @@ export default class StudentController {
       if (!isUUID(id)) {
         throw new InvalidRequestBodyException(["id"]);
       }
-      const student = await getStudentService(id);
+      const student = await this.studentServices.getStudentService(id);
 
       if (!student) {
         throw new StudentNotFoundException();

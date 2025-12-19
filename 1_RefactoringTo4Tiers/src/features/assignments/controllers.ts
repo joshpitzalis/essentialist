@@ -1,18 +1,6 @@
 import { isMissingKeys, parseForResponse, isUUID } from "../../utilities";
-import * as Errors from "../../errorHandler";
 import express, { type Request, type Response, type Router } from "express";
 import { AssignStudentDTO } from "../assignments/DTOs";
-import {
-  createAssignmentService,
-  getAssignmentByIdService,
-  getAssignmentsByClassIdService,
-  getStudentAssignmentService,
-  getStudentGradesService,
-  getStudentSubmittedAssignmentsService,
-  updateStudentAssignmentGradeService,
-  updateStudentAssignmentService,
-  type assignStudentService,
-} from "./services";
 import { ErrorExceptionHandler } from "../../errorHandler";
 import {
   InvalidRequestBodyException,
@@ -22,15 +10,17 @@ import {
   ClassNotFoundException,
   StudentNotFoundException,
 } from "../errors";
-import { prisma } from "../../database";
-import { getClassService } from "../classes/services";
-import { getStudentService } from "../students/services";
+import { assignmentServices } from "./services";
+import { classServices } from "../classes/services";
+import { studentServices } from "../students/services";
 
 export default class AssignmentController {
   private router: Router;
 
   constructor(
-    private assignmentService: typeof assignStudentService,
+    private assignmentServices: assignmentServices,
+    private classServices: classServices,
+    private studentServices: studentServices,
     private errorHandler: ErrorExceptionHandler
   ) {
     this.router = express.Router();
@@ -67,7 +57,7 @@ export default class AssignmentController {
   ) => {
     try {
       const dto = AssignStudentDTO.fromRequest(req.body);
-      const data = await this.assignmentService(dto);
+      const data = await this.assignmentServices.assignStudentService(dto);
       res.status(201).json({
         error: undefined,
         data: parseForResponse(data),
@@ -92,13 +82,15 @@ export default class AssignmentController {
       const { id } = req.body;
 
       // check if student assignment exists
-      const studentAssignment = await getStudentAssignmentService(id);
+      const studentAssignment =
+        await this.assignmentServices.getStudentAssignmentService(id);
 
       if (!studentAssignment) {
         throw new StudentAssignmentNotFoundException();
       }
 
-      const studentAssignmentUpdated = await updateStudentAssignmentService(id);
+      const studentAssignmentUpdated =
+        await this.assignmentServices.updateStudentAssignmentService(id);
 
       res.status(200).json({
         error: undefined,
@@ -123,7 +115,10 @@ export default class AssignmentController {
 
       const { classId, title } = req.body;
 
-      const assignment = await createAssignmentService({ classId, title });
+      const assignment = await this.assignmentServices.createAssignmentService({
+        classId,
+        title,
+      });
 
       res.status(201).json({
         error: undefined,
@@ -154,14 +149,15 @@ export default class AssignmentController {
       }
 
       // check if student assignment exists
-      const studentAssignment = await getStudentAssignmentService(id);
+      const studentAssignment =
+        await this.assignmentServices.getStudentAssignmentService(id);
 
       if (!studentAssignment) {
         throw new AssignmentNotFoundException();
       }
 
       const studentAssignmentUpdated =
-        await updateStudentAssignmentGradeService({
+        await this.assignmentServices.updateStudentAssignmentGradeService({
           id,
           grade,
         });
@@ -187,7 +183,9 @@ export default class AssignmentController {
       if (!isUUID(id)) {
         throw new InvalidRequestBodyException(["id"]);
       }
-      const assignment = await getAssignmentByIdService(id);
+      const assignment = await this.assignmentServices.getAssignmentByIdService(
+        id
+      );
 
       if (!assignment) {
         throw new AssignmentNotFoundException();
@@ -215,13 +213,14 @@ export default class AssignmentController {
       }
 
       // check if class exists
-      const cls = await getClassService(id);
+      const cls = await this.classServices.getClassService(id);
 
       if (!cls) {
         throw new ClassNotFoundException(id);
       }
 
-      const assignments = await getAssignmentsByClassIdService(id);
+      const assignments =
+        await this.assignmentServices.getAssignmentsByClassIdService(id);
 
       res.status(200).json({
         error: undefined,
@@ -245,15 +244,14 @@ export default class AssignmentController {
       }
 
       // check if student exists
-      const student = await getStudentService(id);
+      const student = await this.studentServices.getStudentService(id);
 
       if (!student) {
         throw new StudentNotFoundException();
       }
 
-      const studentAssignments = await getStudentSubmittedAssignmentsService(
-        id
-      );
+      const studentAssignments =
+        await this.assignmentServices.getStudentSubmittedAssignmentsService(id);
 
       res.status(200).json({
         error: undefined,
@@ -277,13 +275,14 @@ export default class AssignmentController {
       }
 
       // check if student exists
-      const student = await getStudentService(id);
+      const student = await this.studentServices.getStudentService(id);
 
       if (!student) {
         throw new StudentNotFoundException();
       }
 
-      const studentAssignments = await getStudentGradesService(id);
+      const studentAssignments =
+        await this.assignmentServices.getStudentGradesService(id);
 
       res.status(200).json({
         error: undefined,
