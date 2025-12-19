@@ -7,6 +7,11 @@ import {
   InvalidRequestBodyException,
   StudentNotFoundException,
 } from "../errors";
+import {
+  createStudentService,
+  getStudentService,
+  getStudentsService,
+} from "./services";
 
 export default class StudentController {
   private router: Router;
@@ -47,11 +52,7 @@ export default class StudentController {
 
       const { name } = req.body;
 
-      const student = await prisma.student.create({
-        data: {
-          name,
-        },
-      });
+      const student = await createStudentService(name);
 
       res.status(201).json({
         error: undefined,
@@ -69,16 +70,8 @@ export default class StudentController {
     next: express.NextFunction
   ) => {
     try {
-      const students = await prisma.student.findMany({
-        include: {
-          classes: true,
-          assignments: true,
-          reportCards: true,
-        },
-        orderBy: {
-          name: "asc",
-        },
-      });
+      const students = await getStudentsService();
+
       res.status(200).json({
         error: undefined,
         data: parseForResponse(students),
@@ -99,16 +92,7 @@ export default class StudentController {
       if (!isUUID(id)) {
         throw new InvalidRequestBodyException(["id"]);
       }
-      const student = await prisma.student.findUnique({
-        where: {
-          id,
-        },
-        include: {
-          classes: true,
-          assignments: true,
-          reportCards: true,
-        },
-      });
+      const student = await getStudentService(id);
 
       if (!student) {
         throw new StudentNotFoundException();

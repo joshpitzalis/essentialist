@@ -9,6 +9,13 @@ import {
   StudentAlreadyEnrolledException,
   ClassNotFoundException,
 } from "../errors";
+import {
+  createClassEnrollmentService,
+  createClassService,
+  getClassService,
+  getDuplicatedClassEnrollmentService,
+  getStudentService,
+} from "./services";
 
 export default class ClassesController {
   private router: Router;
@@ -49,11 +56,7 @@ export default class ClassesController {
 
       const { name } = req.body;
 
-      const cls = await prisma.class.create({
-        data: {
-          name,
-        },
-      });
+      const cls = await createClassService(name);
 
       res
         .status(201)
@@ -78,30 +81,18 @@ export default class ClassesController {
       const { studentId, classId } = req.body;
 
       // check if student exists
-      const student = await prisma.student.findUnique({
-        where: {
-          id: studentId,
-        },
-      });
+      const student = await getStudentService(studentId);
 
       if (!student) {
         throw new StudentNotFoundException();
       }
 
       // check if class exists
-      const cls = await prisma.class.findUnique({
-        where: {
-          id: classId,
-        },
-      });
+      const cls = await getClassService(classId);
 
       // check if student is already enrolled in class
-      const duplicatedClassEnrollment = await prisma.classEnrollment.findFirst({
-        where: {
-          studentId,
-          classId,
-        },
-      });
+      const duplicatedClassEnrollment =
+        await getDuplicatedClassEnrollmentService(studentId, classId);
 
       if (duplicatedClassEnrollment) {
         throw new StudentAlreadyEnrolledException();
@@ -111,12 +102,10 @@ export default class ClassesController {
         throw new ClassNotFoundException(classId);
       }
 
-      const classEnrollment = await prisma.classEnrollment.create({
-        data: {
-          studentId,
-          classId,
-        },
-      });
+      const classEnrollment = await createClassEnrollmentService(
+        studentId,
+        classId
+      );
 
       res.status(201).json({
         error: undefined,

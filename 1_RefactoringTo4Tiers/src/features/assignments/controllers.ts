@@ -2,7 +2,17 @@ import { isMissingKeys, parseForResponse, isUUID } from "../../utilities";
 import * as Errors from "../../errorHandler";
 import express, { type Request, type Response, type Router } from "express";
 import { AssignStudentDTO } from "../assignments/DTOs";
-import type { assignStudentService } from "./services";
+import {
+  createAssignmentService,
+  getAssignmentByIdService,
+  getAssignmentsByClassIdService,
+  getStudentAssignmentService,
+  getStudentGradesService,
+  getStudentSubmittedAssignmentsService,
+  updateStudentAssignmentGradeService,
+  updateStudentAssignmentService,
+  type assignStudentService,
+} from "./services";
 import { ErrorExceptionHandler } from "../../errorHandler";
 import {
   InvalidRequestBodyException,
@@ -13,6 +23,8 @@ import {
   StudentNotFoundException,
 } from "../errors";
 import { prisma } from "../../database";
+import { getClassService } from "../classes/services";
+import { getStudentService } from "../students/services";
 
 export default class AssignmentController {
   private router: Router;
@@ -80,24 +92,13 @@ export default class AssignmentController {
       const { id } = req.body;
 
       // check if student assignment exists
-      const studentAssignment = await prisma.studentAssignment.findUnique({
-        where: {
-          id,
-        },
-      });
+      const studentAssignment = await getStudentAssignmentService(id);
 
       if (!studentAssignment) {
         throw new StudentAssignmentNotFoundException();
       }
 
-      const studentAssignmentUpdated = await prisma.studentAssignment.update({
-        where: {
-          id,
-        },
-        data: {
-          status: "submitted",
-        },
-      });
+      const studentAssignmentUpdated = await updateStudentAssignmentService(id);
 
       res.status(200).json({
         error: undefined,
@@ -122,12 +123,7 @@ export default class AssignmentController {
 
       const { classId, title } = req.body;
 
-      const assignment = await prisma.assignment.create({
-        data: {
-          classId,
-          title,
-        },
-      });
+      const assignment = await createAssignmentService({ classId, title });
 
       res.status(201).json({
         error: undefined,
@@ -158,24 +154,17 @@ export default class AssignmentController {
       }
 
       // check if student assignment exists
-      const studentAssignment = await prisma.studentAssignment.findUnique({
-        where: {
-          id,
-        },
-      });
+      const studentAssignment = await getStudentAssignmentService(id);
 
       if (!studentAssignment) {
         throw new AssignmentNotFoundException();
       }
 
-      const studentAssignmentUpdated = await prisma.studentAssignment.update({
-        where: {
+      const studentAssignmentUpdated =
+        await updateStudentAssignmentGradeService({
           id,
-        },
-        data: {
           grade,
-        },
-      });
+        });
 
       res.status(200).json({
         error: undefined,
@@ -198,15 +187,7 @@ export default class AssignmentController {
       if (!isUUID(id)) {
         throw new InvalidRequestBodyException(["id"]);
       }
-      const assignment = await prisma.assignment.findUnique({
-        include: {
-          class: true,
-          studentTasks: true,
-        },
-        where: {
-          id,
-        },
-      });
+      const assignment = await getAssignmentByIdService(id);
 
       if (!assignment) {
         throw new AssignmentNotFoundException();
@@ -234,25 +215,13 @@ export default class AssignmentController {
       }
 
       // check if class exists
-      const cls = await prisma.class.findUnique({
-        where: {
-          id,
-        },
-      });
+      const cls = await getClassService(id);
 
       if (!cls) {
         throw new ClassNotFoundException(id);
       }
 
-      const assignments = await prisma.assignment.findMany({
-        where: {
-          classId: id,
-        },
-        include: {
-          class: true,
-          studentTasks: true,
-        },
-      });
+      const assignments = await getAssignmentsByClassIdService(id);
 
       res.status(200).json({
         error: undefined,
@@ -276,25 +245,15 @@ export default class AssignmentController {
       }
 
       // check if student exists
-      const student = await prisma.student.findUnique({
-        where: {
-          id,
-        },
-      });
+      const student = await getStudentService(id);
 
       if (!student) {
         throw new StudentNotFoundException();
       }
 
-      const studentAssignments = await prisma.studentAssignment.findMany({
-        where: {
-          studentId: id,
-          status: "submitted",
-        },
-        include: {
-          assignment: true,
-        },
-      });
+      const studentAssignments = await getStudentSubmittedAssignmentsService(
+        id
+      );
 
       res.status(200).json({
         error: undefined,
@@ -318,28 +277,13 @@ export default class AssignmentController {
       }
 
       // check if student exists
-      const student = await prisma.student.findUnique({
-        where: {
-          id,
-        },
-      });
+      const student = await getStudentService(id);
 
       if (!student) {
         throw new StudentNotFoundException();
       }
 
-      const studentAssignments = await prisma.studentAssignment.findMany({
-        where: {
-          studentId: id,
-          status: "submitted",
-          grade: {
-            not: null,
-          },
-        },
-        include: {
-          assignment: true,
-        },
-      });
+      const studentAssignments = await getStudentGradesService(id);
 
       res.status(200).json({
         error: undefined,
