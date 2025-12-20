@@ -8,6 +8,7 @@ import { studentServices } from "./features/students/services";
 import { classServices } from "./features/classes/services";
 import { Database } from "./database";
 import { PrismaClient } from "@prisma/client";
+import Server from "./server";
 
 const prisma = new PrismaClient();
 
@@ -29,16 +30,12 @@ const assignmentsController = new AssignmentsController(
   new ErrorExceptionHandler()
 );
 
-const app = express();
+export const server = new Server(
+  studentsController,
+  classesController,
+  assignmentsController
+);
 
-app.use(express.json());
+const port = Number(process.env.PORT) || 3000;
 
-app.use("/students", studentsController.getRouter());
-app.use("/classes", classesController.getRouter());
-app.use("/assignments", assignmentsController.getRouter());
-
-const port = process.env.PORT || 3000;
-
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+server.start(port);
