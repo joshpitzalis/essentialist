@@ -2,8 +2,13 @@ import {
   AssignmentNotFoundException,
   StudentNotFoundException,
 } from "../errors";
-
+import {
+  getAssignmentByIdDTO,
+  gradeAssignmentDTO,
+  studentAssignmentDTO,
+} from "./DTOs";
 import { Database } from "../../database";
+import { GetClassIdDTO } from "../classes/DTOs";
 
 export class assignmentServices {
   constructor(private db: Database) {
@@ -32,12 +37,12 @@ export class assignmentServices {
     return await this.db.createStudentAssignment(studentId, assignmentId);
   }
 
-  async getStudentAssignmentService(id: string) {
-    return await this.db.getStudentAssignmentService(id);
+  async getStudentAssignmentService(dto: studentAssignmentDTO) {
+    return await this.db.getStudentAssignmentService(dto.id);
   }
 
-  async updateStudentAssignmentService(id: string) {
-    return await this.db.updateStudentAssignmentService(id);
+  async updateStudentAssignmentService(dto: studentAssignmentDTO) {
+    return await this.db.updateStudentAssignmentService(dto.id);
   }
 
   async createAssignmentService({
@@ -50,29 +55,23 @@ export class assignmentServices {
     return await this.db.createAssignmentService(classId, title);
   }
 
-  async updateStudentAssignmentGradeService({
-    id,
-    grade,
-  }: {
-    id: string;
-    grade: string;
-  }) {
-    return await this.db.updateStudentAssignmentGradeService(id, grade);
+  async updateStudentAssignmentGradeService(dto: gradeAssignmentDTO) {
+    return await this.db.updateStudentAssignmentGradeService(dto.id, dto.grade);
   }
 
-  async getAssignmentByIdService(id: string) {
-    return await this.db.getAssignmentByIdService(id);
+  async getAssignmentByIdService(dto: getAssignmentByIdDTO) {
+    return await this.db.getAssignmentByIdService(dto.id);
   }
 
-  async getAssignmentsByClassIdService(id: string) {
-    return await this.db.getAssignmentsByClassIdService(id);
+  async getAssignmentsByClassIdService(dto: GetClassIdDTO) {
+    return await this.db.getAssignmentsByClassIdService(dto.classId);
   }
 
-  async getStudentSubmittedAssignmentsService(id: string) {
-    return await this.db.getStudentSubmittedAssignmentsService(id);
+  async getStudentSubmittedAssignmentsService(dto: studentAssignmentDTO) {
+    return await this.db.getStudentSubmittedAssignmentsService(dto.id);
   }
 
-  async getStudentGradesService(id: string) {
-    return await this.db.getStudentGradesService(id);
+  async getStudentGradesService(dto: studentAssignmentDTO) {
+    return await this.db.getStudentGradesService(dto.id);
   }
 }

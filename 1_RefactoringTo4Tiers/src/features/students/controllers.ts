@@ -1,12 +1,12 @@
 import { isMissingKeys, parseForResponse, isUUID } from "../../utilities";
 import express, { type Request, type Response, type Router } from "express";
-
 import { ErrorExceptionHandler } from "../../errorHandler";
 import {
   InvalidRequestBodyException,
   StudentNotFoundException,
 } from "../errors";
 import type { studentServices } from "./services";
+import { CreateStudentDTO, GetStudentIdDTO } from "./DTOs";
 
 export default class StudentController {
   private router: Router;
@@ -40,14 +40,9 @@ export default class StudentController {
     next: express.NextFunction
   ) => {
     try {
-      const requiredKeys = ["name"];
-      if (isMissingKeys(req.body, requiredKeys)) {
-        throw new InvalidRequestBodyException(requiredKeys);
-      }
+      const dto = CreateStudentDTO.fromRequest(req);
 
-      const { name } = req.body;
-
-      const student = await this.studentServices.createStudentService(name);
+      const student = await this.studentServices.createStudentService(dto);
 
       res.status(201).json({
         error: undefined,
@@ -83,11 +78,8 @@ export default class StudentController {
     next: express.NextFunction
   ) => {
     try {
-      const { id } = req.params;
-      if (!isUUID(id)) {
-        throw new InvalidRequestBodyException(["id"]);
-      }
-      const student = await this.studentServices.getStudentService(id);
+      const dto = GetStudentIdDTO.fromRequest(req);
+      const student = await this.studentServices.getStudentService(dto);
 
       if (!student) {
         throw new StudentNotFoundException();

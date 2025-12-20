@@ -1,11 +1,12 @@
 import { Database } from "../../database";
+import { CreateStudentDTO, GetStudentIdDTO } from "./DTOs";
 
 export class studentServices {
   constructor(private db: Database) {
     this.db = db;
   }
-  async createStudentService(name: string) {
-    const student = await this.db.createStudent(name);
+  async createStudentService(dto: CreateStudentDTO) {
+    const student = await this.db.createStudent(dto.name);
     return student;
   }
 
@@ -13,7 +14,7 @@ export class studentServices {
     return await this.db.getAllStudents();
   }
 
-  async getStudentService(id: string) {
-    return await this.db.getStudentById(id);
+  async getStudentService(dto: GetStudentIdDTO) {
+    return await this.db.getStudentById(dto.id);
   }
 }

@@ -38,6 +38,7 @@ app.use("/classes", classesController.getRouter());
 app.use("/assignments", assignmentsController.getRouter());
 
 const port = process.env.PORT || 3000;
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

@@ -1,25 +1,27 @@
 import { Database } from "../../database";
+import { CreateClassDTO, GetClassIdDTO } from "./DTOs";
+import { GetStudentIdDTO } from "../students/DTOs";
 
 export class classServices {
   constructor(private db: Database) {
     this.db = db;
   }
 
-  async createClassService(name: string) {
-    return await this.db.createClass(name);
+  async createClassService(dto: CreateClassDTO) {
+    return await this.db.createClass(dto.name);
   }
 
-  async getClassService(id: string) {
-    return await this.db.getClassById(id);
+  async getClassService(dto: GetClassIdDTO) {
+    return await this.db.getClassById(dto.classId);
   }
 
   async getDuplicatedClassEnrollmentService(
-    studentId: string,
-    classId: string
+    studentDTO: GetStudentIdDTO,
+    classDTO: GetClassIdDTO
   ) {
     return await this.db.getDuplicatedClassEnrollmentService(
-      studentId,
-      classId
+      studentDTO.id,
+      classDTO.classId
     );
   }
 
