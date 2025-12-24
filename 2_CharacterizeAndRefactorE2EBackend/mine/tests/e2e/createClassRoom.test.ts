@@ -1,22 +1,19 @@
+/// <reference types="jest" />
 import { defineFeature, loadFeature } from "jest-cucumber";
 import path from "path";
 import request from "supertest";
 import { app } from "../../src/index";
 import { resetDatabase } from "../fixtures/reset";
 
-// beforeAll(async () => {
-//   await prisma.class.deleteMany({});
-// });
-
 const feature = loadFeature(
   path.join(__dirname, "../features/createClassRoom.feature")
 );
 
-defineFeature(feature, (test) => {
-  afterEach(async () => {
-    await resetDatabase();
-  });
+afterEach(async () => {
+  await resetDatabase();
+});
 
+defineFeature(feature, (test) => {
   test("Sucessfully create a class room", ({ given, when, then }) => {
     let requestBody: any = {};
     let response: any = {};
@@ -38,10 +35,19 @@ defineFeature(feature, (test) => {
   });
 
   test("Fail to create a class room", ({ given, when, then }) => {
-    given("I want to create a class room with no name", () => {});
+    let requestBody: any = {};
+    let response: any = {};
+    given("I want to create a class room with no name", () => {
+      requestBody = {};
+    });
 
-    when("I send a request to create a class room", () => {});
+    when("I send a request to create a class room", async () => {
+      response = await request(app).post("/classes").send(requestBody);
+    });
 
-    then("the class room should not be created", () => {});
+    then("the class room should not be created", () => {
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("ValidationError");
+    });
   });
 });

@@ -86,6 +86,14 @@ app.post("/classes", async (req: Request, res: Response) => {
 
     const { name } = req.body;
 
+    if (name.trim() === "") {
+      return res.status(400).json({
+        error: Errors.ValidationError,
+        data: undefined,
+        success: false,
+      });
+    }
+
     const classroomExists = await prisma.class.findUnique({ where: { name } });
 
     if (classroomExists) {
