@@ -1,20 +1,37 @@
-import { isMissingKeys } from "../../utilities";
-import type { Request } from "express";
+import { isMissingKeys, isUUID } from "../../utilities";
+import { InvalidRequestBodyException } from "../errors";
+import express from "express";
 
-export class AssignStudentDTO {
+export class CreateStudentDTO {
+  constructor(public name: string) {}
 
-    constructor(public studentId: string, public assignmentId: string) {
+  static fromRequest(req: express.Request) {
+    const requiredKeys = ["name"];
+    const isRequestInvalid =
+      !req.body ||
+      typeof req.body !== "object" ||
+      isMissingKeys(req.body, requiredKeys);
+
+    if (isRequestInvalid) {
+      throw new InvalidRequestBodyException(requiredKeys);
     }
 
-    static fromRequest(req: Request) {
-        const requiredKeys = ["studentId", "assignmentId"];
-        const isRequestInvalid = !req.body || typeof req.body !== "object" || isMissingKeys(req.body, requiredKeys)
+    const { name } = req.body as { name: string };
 
-        if (isRequestInvalid) {
-            throw new Error("Invalid request");
-        }
+    return new CreateStudentDTO(name);
+  }
+}
 
-        const { studentId, assignmentId } = req.body as { studentId: string, assignmentId: string };
-        return new AssignStudentDTO(studentId, assignmentId);
+export class GetStudentIdDTO {
+  constructor(public id: string) {}
+
+  static fromRequest(req: express.Request) {
+    const { id } = req.params;
+
+    if (!isUUID(id)) {
+      throw new InvalidRequestBodyException(["id"]);
     }
+
+    return new GetStudentIdDTO(id);
+  }
 }

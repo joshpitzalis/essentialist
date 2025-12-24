@@ -1,45 +1,41 @@
-import express from 'express';
-import { assignStudentToAssignmentController, getStudentGradesController, getStudentSubmittedAssignmentsController, getStudentByIdController, getStudentsController, assignStudentToClassController, createStudentController } from './features/students/controllers';
+import express from "express";
+import AssignmentsController from "./features/assignments/controllers";
+import ClassesController from "./features/classes/controllers";
+import StudentsController from "./features/students/controllers";
+import { ErrorExceptionHandler } from "./errorHandler";
+import { assignmentServices } from "./features/assignments/services";
+import { studentServices } from "./features/students/services";
+import { classServices } from "./features/classes/services";
+import { Database } from "./database";
+import { PrismaClient } from "@prisma/client";
+import Server from "./server";
 
-import { createClassController } from './features/classes/controllers';
-import { gradeAssignmentController, getAssignmentsByClassIdController, getAssignmentByIdController, submitAssignmentController, createAssignmentController } from './features/assignments/controllers';
+const prisma = new PrismaClient();
 
+const db = new Database(prisma);
 
+const studentsController = new StudentsController(
+  new studentServices(db),
+  new ErrorExceptionHandler()
+);
+const classesController = new ClassesController(
+  new classServices(db),
+  new studentServices(db),
+  new ErrorExceptionHandler()
+);
+const assignmentsController = new AssignmentsController(
+  new assignmentServices(db),
+  new classServices(db),
+  new studentServices(db),
+  new ErrorExceptionHandler()
+);
 
-const app = express();
-app.use(express.json());
+export const server = new Server(
+  studentsController,
+  classesController,
+  assignmentsController
+);
 
+const port = Number(process.env.PORT) || 3000;
 
-// API Endpoints
-
-// students
-app.post('/students', createStudentController);
-app.post('/student-assignments', assignStudentToAssignmentController)
-app.get('/students', getStudentsController)
-app.get('/students/:id', getStudentByIdController)
-
-
-
-
-// classes
-app.post('/classes', createClassController);
-app.post('/class-enrollments', assignStudentToClassController)
-app.get('/classes/:id/assignments', getAssignmentsByClassIdController)
-
-
-
-
-// assignments 
-app.post('/assignments', createAssignmentController)
-app.post('/student-assignments/submit', submitAssignmentController)
-app.post('/student-assignments/grade', gradeAssignmentController)
-app.get('/assignments/:id', getAssignmentByIdController)
-app.get('/student/:id/assignments', getStudentSubmittedAssignmentsController)
-app.get('/student/:id/grades', getStudentGradesController)
-
-
-const port = process.env.PORT || 3000;
-
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+server.start(port);

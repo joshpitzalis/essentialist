@@ -1,30 +1,20 @@
-import { prisma, Database } from "../../database";
+import { Database } from "../../database";
+import { CreateStudentDTO, GetStudentIdDTO } from "./DTOs";
 
+export class studentServices {
+  constructor(private db: Database) {
+    this.db = db;
+  }
+  async createStudentService(dto: CreateStudentDTO) {
+    const student = await this.db.createStudent(dto.name);
+    return student;
+  }
 
-export async function assignStudentService(studentId: string, assignmentId: string) {
-    const student = await Database.getStudentById(studentId)
+  async getStudentsService() {
+    return await this.db.getAllStudents();
+  }
 
-
-    if (!student) {
-        throw new Error("Student not found");
-    }
-
-    const assignment = await prisma.assignment.findUnique({
-        where: {
-            id: assignmentId
-        }
-    });
-
-    if (!assignment) {
-        throw new Error("Assignment not found");
-    }
-
-    const studentAssignment = await prisma.studentAssignment.create({
-        data: {
-            studentId,
-            assignmentId,
-        }
-    });
-
-    return studentAssignment;
+  async getStudentService(dto: GetStudentIdDTO) {
+    return await this.db.getStudentById(dto.id);
+  }
 }
