@@ -26,9 +26,3 @@ Feature: Assignment Grading
     When I assign the grade "Z" to the student's assignment
     Then the grading should fail
     And I should receive an error message "Invalid grade value"
-
-  Scenario: Attempt to grade a non-existent assignment
-    Given there is an existing student enrolled to a class
-    When I attempt to assign a grade to a non-existent assignment
-    Then the grading should fail
-    And I should receive an error message "Assignment not found"

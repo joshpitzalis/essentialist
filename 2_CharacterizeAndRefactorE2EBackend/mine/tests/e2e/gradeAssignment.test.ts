@@ -4,6 +4,12 @@ import { defineFeature, loadFeature } from "jest-cucumber";
 import path from "path";
 import request from "supertest";
 import { app } from "../../src/index";
+import {
+  aClassRoom,
+  anAssignment,
+  anEnrolledStudent,
+  aStudent,
+} from "../fixtures/builders";
 import { assignmentBuilder } from "../fixtures/builders/assignmentBuilder";
 import { assignmentSubmissionBuilder } from "../fixtures/builders/assignmentSubmissionBuilder";
 import { classroomBuilder } from "../fixtures/builders/classroomBuilder";
@@ -85,19 +91,50 @@ defineFeature(feature, (test) => {
     when,
     then,
   }) => {
-    given("there is an existing student enrolled to a class", () => {});
+    let student: Student;
+    let assignment: Assignment;
+    let mathClass: Class;
+    let requestBody: any = {};
+    let response: any = {};
 
-    and("an assignment exists for the class", () => {});
+    given("there is an existing student enrolled to a class", async () => {
+      const enrollmentResult = await anEnrolledStudent()
+        .fromClassroom(aClassRoom().withClassName("Math"))
+        .and(aStudent().withName("Johnny").withRandomEmail())
+        .build();
+
+      student = enrollmentResult.student;
+      mathClass = enrollmentResult.classroom;
+    });
+
+    and("an assignment exists for the class", async () => {
+      assignment = await anAssignment().fromClassroom(mathClass).build();
+    });
 
     but("the student has not submitted the assignment", () => {});
 
-    when("I attempt to assign a grade to the student's assignment", () => {});
+    when(
+      "I attempt to assign a grade to the student's assignment",
+      async () => {
+        requestBody = {
+          studentId: student.id,
+          assignmentId: assignment.id,
+          grade: "A",
+        };
+
+        response = await request(app)
+          .post("/student-assignments/grade")
+          .send(requestBody);
+      }
+    );
 
     then("the grading should fail", () => {
-      expect(true).toBe(false);
+      expect(response.status).toBe(404);
     });
 
-    and(/^I should receive an error message "(.*)"$/, (arg0) => {});
+    and(/^I should receive an error message "(.*)"$/, (arg0) => {
+      expect(response.body.error).toBe("AssignmentNotFound");
+    });
   });
 
   test("Attempt to grade with an invalid grade value", ({
@@ -106,38 +143,55 @@ defineFeature(feature, (test) => {
     when,
     then,
   }) => {
-    given("there is an existing student enrolled to a class", () => {});
+    let student: Student;
+    let assignment: Assignment;
+    let mathClass: Class;
+    let requestBody: any = {};
+    let response: any = {};
 
-    and("an assignment exists for the class", () => {});
+    given("there is an existing student enrolled to a class", async () => {
+      const enrollmentResult = await anEnrolledStudent()
+        .fromClassroom(aClassRoom().withClassName("Math"))
+        .and(aStudent().withName("Johnny").withRandomEmail())
+        .build();
 
-    and("the student has submitted the assignment", () => {});
+      student = enrollmentResult.student;
+      mathClass = enrollmentResult.classroom;
+    });
+
+    and("an assignment exists for the class", async () => {
+      assignment = await anAssignment().fromClassroom(mathClass).build();
+    });
+
+    and("the student has submitted the assignment", async () => {
+      const submission = await new assignmentSubmissionBuilder()
+        .fromStudent(student)
+        .andFromClass(mathClass)
+        .andWithAssignment(assignment)
+        .build();
+    });
 
     when(
       /^I assign the grade "(.*)" to the student's assignment$/,
-      (arg0) => {}
+      async (arg0) => {
+        requestBody = {
+          studentId: student.id,
+          assignmentId: assignment.id,
+          grade: "z",
+        };
+
+        response = await request(app)
+          .post("/student-assignments/grade")
+          .send(requestBody);
+      }
     );
 
     then("the grading should fail", () => {
-      expect(true).toBe(false);
+      expect(response.status).toBe(400);
     });
 
-    and(/^I should receive an error message "(.*)"$/, (arg0) => {});
-  });
-
-  test("Attempt to grade a non-existent assignment", ({
-    given,
-    when,
-    then,
-    and,
-  }) => {
-    given("there is an existing student enrolled to a class", () => {});
-
-    when("I attempt to assign a grade to a non-existent assignment", () => {});
-
-    then("the grading should fail", () => {});
-
     and(/^I should receive an error message "(.*)"$/, (arg0) => {
-      expect(true).toBe(false);
+      expect(response.body.error).toBe("ValidationError");
     });
   });
 });

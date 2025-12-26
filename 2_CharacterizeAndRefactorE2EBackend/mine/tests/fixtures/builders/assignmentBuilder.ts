@@ -5,13 +5,13 @@ import { classroomBuilder } from "./classroomBuilder";
 
 export class assignmentBuilder {
   private props: Partial<Assignment>;
-  private classroom?: Class;
+  private classroom?: Class | classroomBuilder;
 
   constructor() {
     this.props = { title: faker.lorem.words(3) };
   }
 
-  fromClassroom(classroom: Class) {
+  fromClassroom(classroom: Class | classroomBuilder) {
     this.classroom = classroom;
     return this;
   }

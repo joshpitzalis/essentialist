@@ -5,15 +5,15 @@ import { classroomBuilder } from "./classroomBuilder";
 import { studentBuilder } from "./studentBuilder";
 
 export class studentEnrollmentBuilder {
-  private classroom?: Class;
-  private student?: Student;
+  private classroom?: Class | classroomBuilder;
+  private student?: Student | studentBuilder;
 
-  fromClassroom(classroom: Class) {
+  fromClassroom(classroom: Class | classroomBuilder) {
     this.classroom = classroom;
     return this;
   }
 
-  and(student: Student) {
+  and(student: Student | studentBuilder) {
     this.student = student;
     return this;
   }
