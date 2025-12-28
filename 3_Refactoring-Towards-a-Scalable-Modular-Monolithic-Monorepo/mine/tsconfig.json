@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "target": "es5",
+    "module": "commonjs",
+    "lib": ["es6"],
+    "strict": true,
+    "esModuleInterop": true,
+    "types": ["node"],
+    "resolveJsonModule": true,
+    "paths": {
+      "@question-scraper/backend/*": ["./packages/backend/*"],
+      "@question-scraper/frontend/*": ["./packages/frontend/*"],
+      "@question-scraper/shared/*": ["./packages/shared/*"]
+    }
+  }
+}
