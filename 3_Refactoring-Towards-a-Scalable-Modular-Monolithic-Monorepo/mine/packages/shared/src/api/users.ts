@@ -1,6 +1,5 @@
+import axios from "axios";
 import { APIResponse, GenericErrors, ServerError } from "./index";
-
-UserResponse;
 
 export type User = {
   id: number;
@@ -36,3 +35,34 @@ export type UserResponse = APIResponse<
   CreateUserResponse | GetUserByEmailResponse | null,
   GetUserErrors
 >;
+
+export const createUsersAPI = (apiURL: string) => {
+  return {
+    register: async (
+      input: Partial<CreateUserParams>
+    ): Promise<CreateUserResponse> => {
+      try {
+        const successResponse = await axios.post(`${apiURL}/users/new`, {
+          ...input,
+        });
+        return successResponse.data as CreateUserResponse;
+      } catch (err: any) {
+        if (err.response?.data) {
+          return err.response.data as CreateUserResponse;
+        }
+        throw err;
+      }
+    },
+    getUserByEmail: async (email: string): Promise<GetUserByEmailResponse> => {
+      try {
+        const successResponse = await axios.get(`${apiURL}/users/${email}`);
+        return successResponse.data as GetUserByEmailResponse;
+      } catch (err: any) {
+        if (err.response?.data) {
+          return err.response.data as GetUserByEmailResponse;
+        }
+        throw err;
+      }
+    },
+  };
+};

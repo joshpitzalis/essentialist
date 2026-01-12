@@ -23,6 +23,10 @@ export class CompositionRoot {
     return CompositionRoot.instance;
   }
 
+  public static resetInstance() {
+    CompositionRoot.instance = null;
+  }
+
   private constructor(config: Config) {
     this.config = config;
     this.dbConnection = this.createDBConnection();
@@ -55,7 +59,7 @@ export class CompositionRoot {
   }
 
   createWebServer() {
-    return new WebServer({ port: 3000, env: this.config.env });
+    return new WebServer({ port: 3000, env: this.config.env, script: this.config.script });
   }
 
   getWebServer() {

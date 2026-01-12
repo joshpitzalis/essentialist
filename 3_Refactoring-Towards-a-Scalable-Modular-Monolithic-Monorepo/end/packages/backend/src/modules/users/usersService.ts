@@ -1,29 +1,26 @@
 import { Database } from "@dddforum/backend/src/shared/database";
+import { User } from "@dddforum/shared/src/api/users";
+import { TransactionalEmailAPI } from "../notifications/transactionalEmailAPI";
 import { CreateUserCommand } from "./usersCommand";
 import {
   EmailAlreadyInUseException,
   UserNotFoundException,
   UsernameAlreadyTakenException,
 } from "./usersExceptions";
-import { User } from "@dddforum/shared/src/api/users";
-import { TransactionalEmailAPI } from "../notifications/transactionalEmailAPI";
 
 export class UsersService {
-  constructor(
-    private db: Database,
-    private emailAPI: TransactionalEmailAPI,
-  ) {}
+  constructor(private db: Database, private emailAPI: TransactionalEmailAPI) {}
 
   async createUser(userData: CreateUserCommand): Promise<User> {
     const existingUserByEmail = await this.db.users.findUserByEmail(
-      userData.email,
+      userData.email
     );
     if (existingUserByEmail) {
       throw new EmailAlreadyInUseException(userData.email);
     }
 
     const existingUserByUsername = await this.db.users.findUserByUsername(
-      userData.username,
+      userData.username
     );
     if (existingUserByUsername) {
       throw new UsernameAlreadyTakenException(userData.username);

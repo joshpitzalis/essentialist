@@ -1,9 +1,11 @@
 // import { prisma } from "@question-scraper/backend/src/database";
 import { Database } from "@question-scraper/backend/src/database";
-import { app } from "@question-scraper/backend/src/index";
 import { CompositionRoot, Config } from "@question-scraper/backend/src/root";
 import { WebServer } from "@question-scraper/backend/src/webServer";
-import { CreateUserParams } from "@question-scraper/shared/src/api/users";
+import {
+  CreateUserParams,
+  createUsersAPI,
+} from "@question-scraper/shared/src/api/users";
 import { DatabaseFixture } from "@question-scraper/shared/tests/support/fixtures/databaseFixture";
 import { defineFeature, loadFeature } from "jest-cucumber";
 import path from "path";
@@ -29,20 +31,25 @@ defineFeature(feature, (test) => {
 
   let composition: CompositionRoot;
   let server: WebServer;
+  let app: any;
   const config: Config = new Config("test:e2e");
 
   // let addEmailToListResponse: AddEmailToListResponse;
   let dbConnection: Database;
+  let userApi: ReturnType<typeof createUsersAPI> = {} as any;
 
   beforeAll(async () => {
     // dbFixture = new DatabaseFixture(prisma);
+    CompositionRoot.resetInstance();
     composition = CompositionRoot.createCompositionRoot(config);
     server = composition.getWebServer();
+    app = server.getApplication();
     dbFixture = new DatabaseFixture();
     dbConnection = composition.getDBConnection();
 
     await server.start();
     await dbConnection.connect();
+    userApi = createUsersAPI("http://localhost:3000");
   });
 
   afterEach(async () => {
@@ -72,9 +79,11 @@ defineFeature(feature, (test) => {
     when(
       "I register with valid account details accepting marketing emails",
       async () => {
-        createUserResponse = await request(app)
-          .post("/users/new")
-          .send(createUserInput);
+        // createUserResponse = await request(app)
+        //   .post("/users/new")
+        //   .send(createUserInput);
+
+        createUserResponse = await userApi.register(createUserInput);
 
         addEmailToListResponse = await request(app)
           .post("/marketing/new")
@@ -83,11 +92,10 @@ defineFeature(feature, (test) => {
     );
 
     then("I should be granted access to my account", () => {
-      const { data, success, error } = createUserResponse.body;
+      const { data, success, error } = createUserResponse;
 
       // Result Verification
       expect(success).toBeTruthy();
-      expect(createUserResponse.status).toBe(201);
       expect(data!.id).toBeDefined();
       expect(data!.email).toEqual(createUserInput.email);
       expect(data!.firstName).toEqual(createUserInput.firstName);
@@ -97,7 +105,7 @@ defineFeature(feature, (test) => {
 
     and("I should expect to receive marketing emails", () => {
       const { success } = addEmailToListResponse.body;
-      expect(createUserResponse.status).toBe(201);
+      expect(addEmailToListResponse.status).toBe(201);
       expect(success).toBeTruthy();
     });
   });

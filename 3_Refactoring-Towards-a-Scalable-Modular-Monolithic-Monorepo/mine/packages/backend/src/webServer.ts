@@ -6,6 +6,7 @@ import { Server } from "http";
 interface WebServerConfig {
   port: number;
   env: string;
+  script?: string;
 }
 
 export class WebServer {
@@ -39,7 +40,8 @@ export class WebServer {
   async start(): Promise<void> {
     return new Promise((resolve, _reject) => {
       ProcessService.killProcessOnPort(this.config.port, () => {
-        if (this.config.env === "test") {
+        // Skip starting the server only for unit tests, not e2e tests
+        if (this.config.env === "test" && this.config.script !== "test:e2e") {
           resolve();
           return;
         }

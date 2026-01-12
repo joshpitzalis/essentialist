@@ -1,31 +1,31 @@
-
+import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import { api } from "../api";
 import { Layout } from "../components/layout";
+import { OverlaySpinner } from "../components/overlaySpinner";
 import {
   RegistrationForm,
   RegistrationInput,
 } from "../components/registrationForm";
-import { ToastContainer, toast } from 'react-toastify';
-import { api } from "../api";
-import { useUser } from "../contexts/userContext";
-import { useNavigate } from "react-router-dom";
 import { useSpinner } from "../contexts/spinnerContext";
-import { OverlaySpinner } from "../components/overlaySpinner";
-
+import { useUser } from "../contexts/userContext";
 
 type ValidationResult = {
   success: boolean;
   errorMessage?: string;
-}
+};
 
-function validateForm (input: RegistrationInput): ValidationResult {
-  if (input.email.indexOf('@') === -1) return { success: false, errorMessage: "Email invalid" };
-  if (input.username.length < 2) return { success: false, errorMessage: "Username invalid" };
-  return { success: true }
+function validateForm(input: RegistrationInput): ValidationResult {
+  if (input.email.indexOf("@") === -1)
+    return { success: false, errorMessage: "Email invalid" };
+  if (input.username.length < 2)
+    return { success: false, errorMessage: "Username invalid" };
+  return { success: true };
 }
 
 export const RegisterPage = () => {
   const { setUser } = useUser();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const spinner = useSpinner();
 
   const handleSubmitRegistrationForm = async (input: RegistrationInput) => {
@@ -42,36 +42,63 @@ export const RegisterPage = () => {
     // Start loading spinner
     spinner.activate();
     try {
+      // // Make API call
+      // const response = await api.register(input);
+
       // Make API call
       const response = await api.register(input);
+      if (!response.success) {
+        switch (response.error.code) {
+          case "EmailAlreadyInUse":
+            return toast.error(
+              "This email is already in use. Perhaps you want to log in?"
+            );
+          case "UsernameAlreadyTaken":
+            return toast.error(
+              "Please try a different username, this one is already taken."
+            );
+          case "ValidationError":
+            // We could further improve this with more refined types
+            // to specify which form field was invalid.
+            return toast.error(response.error.message);
+          case "ServerError":
+          default:
+            return toast.error("Some backend error occurred");
+        }
+      }
+      // // Save the user details to the cache
+      // setUser(response.data.data);
+
       // Save the user details to the cache
-      setUser(response.data.data);
-      console.log('setting data', response.data.data)
+      setUser(response.data);
+
+      console.log("setting data", response.data);
       // Stop the loading spinner
       spinner.deactivate();
       // Show the toast
-      toast('Success! Redirecting home.')
+      toast("Success! Redirecting home.");
       // In 3 seconds, redirect to the main page
-      setTimeout(() => { navigate('/') }, 3000)
+      setTimeout(() => {
+        navigate("/");
+      }, 3000);
     } catch (err) {
       // If the call failed
       // Stop the spinner
       spinner.deactivate();
       // Show the toast (for unknown error)
-      return toast.error('Some backend error occurred');
+      return toast.error("Some backend error occurred");
     }
-
   };
 
   return (
     <Layout>
-      <ToastContainer/>
+      <ToastContainer />
       <RegistrationForm
         onSubmit={(input: RegistrationInput) =>
           handleSubmitRegistrationForm(input)
         }
       />
-      <OverlaySpinner isActive={spinner.spinner?.isActive}/>
+      <OverlaySpinner isActive={spinner.spinner?.isActive} />
     </Layout>
   );
 };
