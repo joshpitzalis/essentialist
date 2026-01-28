@@ -1,21 +1,57 @@
-import { TransactionalEmailAPI } from "./transactionalEmailAPI";
+import { ProductionEmailSender } from "./adapters/transactionalEmailAPI";
+import type { TransactionalEmailAPI } from "./ports/transactionalEmailAPI";
 
 export class NotificationsModule {
-  private transactionalEmailAPI: TransactionalEmailAPI;
+	private transactionalEmailAPI: TransactionalEmailAPI;
 
-  private constructor() {
-    this.transactionalEmailAPI = this.createTransactionalEmailAPI();
-  }
+	private constructor() {
+		this.transactionalEmailAPI = this.createTransactionalEmailAPI();
+	}
 
-  static build() {
-    return new NotificationsModule();
-  }
+	static build() {
+		return new NotificationsModule();
+	}
 
-  public getTransactionalEmailAPI() {
-    return this.transactionalEmailAPI;
-  }
+	public getTransactionalEmailAPI() {
+		return this.transactionalEmailAPI;
+	}
 
-  private createTransactionalEmailAPI() {
-    return new TransactionalEmailAPI();
-  }
+	private createTransactionalEmailAPI() {
+		return new ProductionEmailSender();
+	}
 }
+
+// import type { Config } from "../../shared/config";
+// import { ApplicationModule } from "../../shared/modules/applicationModule";
+// import { TransactionalEmailAPISpy } from "./adapters/transactionalEmailAPI/transactionalEmailAPISpy";
+// import type { TransactionalEmailAPI } from "./ports/transactionalEmailAPI";
+
+// export class NotificationsModule extends ApplicationModule {
+// 	private transactionalEmailAPI: TransactionalEmailAPI;
+
+// 	private constructor(config: Config) {
+// 		super(config);
+// 		this.transactionalEmailAPI = this.createTransactionalEmailAPI();
+// 	}
+
+// 	static build(config: Config) {
+// 		return new NotificationsModule(config);
+// 	}
+
+// 	public getTransactionalEmailAPI() {
+// 		return this.transactionalEmailAPI;
+// 	}
+
+// 	private createTransactionalEmailAPI() {
+// 		if (this.getEnvironment() === "production") {
+// 			return new TransactionalEmailAPISpy();
+// 		}
+
+// 		/**
+// 		 * For 'testing' and 'staging', if we wanted to use a different one
+// 		 */
+
+// 		// When we execute unit tests, we use this.
+// 		return new TransactionalEmailAPISpy();
+// 	}
+// }
