@@ -1,6 +1,5 @@
 # Begin
 
-
 This is where you'll write your best-practice-first implementation of the refactoring to 4 tiers exercise to the High School Domain. You can [see the assignment page for more details](https://www.essentialist.dev/products/the-software-essentialist/categories/2155097981/posts/2176565064).
 
 ## Getting Started
@@ -14,9 +13,8 @@ This is where you'll write your best-practice-first implementation of the refact
 5. You can access the application at `http://localhost:3000`
 6. You can interact with the API through any API client like Postman, Insomnia or your CLI.
 
-
 ## Database Schema
 
 The database schema is as follows:
 
-![Relational Database Diagram](dbdiagram.png)
+![Relational Database Diagram](.gitbook/assets/dbdiagram.png)
